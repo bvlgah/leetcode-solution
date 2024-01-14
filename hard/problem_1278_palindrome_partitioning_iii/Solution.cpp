@@ -8,24 +8,21 @@ class Solution {
 public:
   int palindromePartition(std::string s, int k) {
     calculatePalindromeCosts(s);
-    unsigned NumPartitions = static_cast<unsigned>(k);
-    std::vector<CostType> Costs(Size), Aux(Size);
+    NumPartitions = static_cast<unsigned>(k);
+    PartitionCosts.resize(Size);
+    // One partition
     for (unsigned End = 0; End < Size; ++End)
-      Costs[End] = getPalindromeCost(0, End);
-    std::vector<CostType> *WorkingCosts = &Costs;
-    std::vector<CostType> *Tmp = &Aux;
-    for (unsigned PartId = 1; PartId < NumPartitions; ++PartId) {
-      for (unsigned End = PartId; End < Size; ++End) {
-        CostType Cost = CostMax;
-        for (unsigned Start = PartId; Start <= End; ++Start) {
-          Cost = std::min<CostType>(Cost,
-            getPalindromeCost(Start, End) + (*WorkingCosts)[Start - 1]);
-        }
-        (*Tmp)[End] = Cost;
+      PartitionCosts[End] = getPalindromeCost(0, End);
+    // k-1 partitions
+    for (unsigned PartId = 1; PartId + 1 < NumPartitions; ++PartId) {
+      for (unsigned End = Size - 1; End >= PartId; --End) {
+        updatePartitionCosts(End, PartId);
       }
-      std::swap(WorkingCosts, Tmp);
     }
-    return WorkingCosts->back();
+    // k partitions
+    if (NumPartitions > 1)
+      updatePartitionCosts(Size - 1, NumPartitions - 1);
+    return PartitionCosts.back();
   }
 
 private:
@@ -47,6 +44,15 @@ private:
     }
   }
 
+  void updatePartitionCosts(unsigned End, unsigned PartId) {
+    CostType Cost = CostMax;
+    for (unsigned Start = PartId; Start <= End; ++Start) {
+      Cost = std::min<CostType>(Cost,
+        getPalindromeCost(Start, End) + PartitionCosts[Start - 1]);
+    }
+    PartitionCosts[End] = Cost;
+  }
+
   void init(const std::string &Str) {
     PalindromeCosts.resize(Str.size() * Str.size());
     Size = static_cast<unsigned>(Str.size());
@@ -64,8 +70,10 @@ private:
     return Size * End + Start;
   }
 
-  std::vector<unsigned char> PalindromeCosts;
+  std::vector<CostType> PalindromeCosts;
+  std::vector<CostType> PartitionCosts;
   unsigned Size;
+  unsigned NumPartitions;
 };
 
 void testCase1() {

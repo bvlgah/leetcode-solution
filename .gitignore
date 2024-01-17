@@ -4,3 +4,6 @@ Solution
 # macOS
 Solution.dSYM
 .DS_Store
+
+# Vim
+.*.swp
